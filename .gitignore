@@ -1,0 +1,10 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+
+tests/answer_evaluation_results.json
+
+.idea/
+.vscode/
+Smart Document Assistant.pdf

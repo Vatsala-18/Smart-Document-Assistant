@@ -1,0 +1,231 @@
+[
+    {
+        "id": 1,
+        "question": "What is the main purpose of the Smart Document Assistant?",
+        "expected_pages": [
+            1
+        ],
+        "answerable": true,
+        "expected_answer": "The Smart Document Assistant is designed to help users find information inside large documents quickly by allowing them to upload documents and ask questions using natural language."
+    },
+    {
+        "id": 2,
+        "question": "What library is used for vector similarity search?",
+        "expected_pages": [
+            2
+        ],
+        "answerable": true,
+        "expected_answer": "FAISS is used for efficient similarity search and clustering of dense vectors."
+    },
+    {
+        "id": 3,
+        "question": "What is an embedding?",
+        "expected_pages": [
+            2
+        ],
+        "answerable": true,
+        "expected_answer": "An embedding is a numerical representation of text in the form of a vector containing many numerical values."
+    },
+    {
+        "id": 4,
+        "question": "What is chunking?",
+        "expected_pages": [
+            1
+        ],
+        "answerable": true,
+        "expected_answer": "Chunking is the process of dividing a document into smaller sections called chunks."
+    },
+    {
+        "id": 5,
+        "question": "What does RAG stand for?",
+        "expected_pages": [
+            3
+        ],
+        "answerable": true,
+        "expected_answer": "RAG stands for Retrieval-Augmented Generation."
+    },
+    {
+        "id": 6,
+        "question": "How does semantic search differ from keyword search?",
+        "expected_pages": [
+            2
+        ],
+        "answerable": true,
+        "expected_answer": "Semantic search attempts to find text with similar meaning, whereas traditional keyword search requires matching keywords or terms."
+    },
+    {
+        "id": 7,
+        "question": "Why might a search for 'reset my password' find information about 'account credential recovery'?",
+        "expected_pages": [
+            2
+        ],
+        "answerable": true,
+        "expected_answer": "Because semantic search finds text with similar meaning rather than requiring an exact keyword match. The phrase 'account credential recovery' can be semantically similar to 'reset my password'."
+    },
+    {
+        "id": 8,
+        "question": "Why are document chunks converted into vectors?",
+        "expected_pages": [
+            2
+        ],
+        "answerable": true,
+        "expected_answer": "Document chunks are converted into vectors so that they can be stored in a vector index and searched based on semantic similarity to a query."
+    },
+    {
+        "id": 9,
+        "question": "Why shouldn't the entire document be sent to the language model for every question?",
+        "expected_pages": [
+            1
+        ],
+        "answerable": true,
+        "expected_answer": "Sending the entire document for every question is inefficient and could exceed the language model's context limit. Chunking allows only relevant smaller pieces to be retrieved."
+    },
+    {
+        "id": 10,
+        "question": "Why can very small chunks cause retrieval problems?",
+        "expected_pages": [
+            1
+        ],
+        "answerable": true,
+        "expected_answer": "Very small chunks can separate important context across multiple chunks, causing relevant information to be split apart."
+    },
+    {
+        "id": 11,
+        "question": "Why can very large chunks reduce retrieval quality?",
+        "expected_pages": [
+            1
+        ],
+        "answerable": true,
+        "expected_answer": "Very large chunks may contain unnecessary information, which can reduce retrieval precision and increase the amount of context sent to the language model."
+    },
+    {
+        "id": 12,
+        "question": "Why does chunk overlap help preserve context?",
+        "expected_pages": [
+            1
+        ],
+        "answerable": true,
+        "expected_answer": "Chunk overlap preserves information when an important sentence appears near the boundary between two chunks."
+    },
+    {
+        "id": 13,
+        "question": "What happens after a user asks a question in a RAG system?",
+        "expected_pages": [
+            3
+        ],
+        "answerable": true,
+        "expected_answer": "The question is converted into an embedding, relevant document chunks are retrieved, the chunks are added to a prompt, and the language model generates an answer using the question and retrieved context."
+    },
+    {
+        "id": 14,
+        "question": "Why is retrieval quality important for reducing hallucinations?",
+        "expected_pages": [
+            4
+        ],
+        "answerable": true,
+        "expected_answer": "Retrieval quality is important because if irrelevant chunks are retrieved, the language model may produce an incorrect answer. Good retrieval provides relevant information for generating the answer."
+    },
+    {
+        "id": 15,
+        "question": "What happens if the vector search retrieves irrelevant chunks?",
+        "expected_pages": [
+            4
+        ],
+        "answerable": true,
+        "expected_answer": "If the retrieval system returns irrelevant chunks, the language model may still produce an incorrect answer."
+    },
+    {
+        "id": 16,
+        "question": "How does RAG allow a knowledge base to be updated without retraining the language model?",
+        "expected_pages": [
+            3
+        ],
+        "answerable": true,
+        "expected_answer": "RAG retrieves information from an external knowledge source, so the knowledge source can be updated without retraining the language model."
+    },
+    {
+        "id": 17,
+        "question": "What example chunk size and overlap are described in this document?",
+        "expected_pages": [
+            1
+        ],
+        "answerable": true,
+        "expected_answer": "The document describes chunks of approximately 1,000 characters with an overlap of 200 characters."
+    },
+    {
+        "id": 18,
+        "question": "What does top-k mean?",
+        "expected_pages": [
+            4
+        ],
+        "answerable": true,
+        "expected_answer": "Top-k determines how many document chunks are returned from the vector search."
+    },
+    {
+        "id": 19,
+        "question": "What happens when top-k is set to 3?",
+        "expected_pages": [
+            4
+        ],
+        "answerable": true,
+        "expected_answer": "When top-k is set to 3, the system retrieves the three most similar document chunks."
+    },
+    {
+        "id": 20,
+        "question": "What metadata should be stored with each document chunk?",
+        "expected_pages": [
+            1,
+            4
+        ],
+        "answerable": true,
+        "expected_answer": "Each chunk should retain metadata such as the document name, page number, and chunk identifier. Section names can also be stored as metadata."
+    },
+    {
+        "id": 21,
+        "question": "What documents are used in the multi-document example?",
+        "expected_pages": [
+            5
+        ],
+        "answerable": true,
+        "expected_answer": "The example uses Employee Handbook.pdf, Product Documentation.pdf, Security Policy.pdf, and Installation Guide.pdf."
+    },
+    {
+        "id": 22,
+        "question": "Which document should be searched for questions about session retention?",
+        "expected_pages": [
+            5
+        ],
+        "answerable": true,
+        "expected_answer": "Security Policy.pdf should be searched for questions about how long user sessions are retained."
+    },
+    {
+        "id": 23,
+        "question": "Why is source-document metadata important when multiple documents are indexed?",
+        "expected_pages": [
+            5
+        ],
+        "answerable": true,
+        "expected_answer": "Source-document metadata identifies which document each chunk came from, allowing the system to retrieve information from the appropriate document instead of returning unrelated information from another document."
+    },
+    {
+        "id": 24,
+        "question": "Who created the Smart Document Assistant?",
+        "expected_pages": [],
+        "answerable": false,
+        "expected_answer": "The information is not available in the document."
+    },
+    {
+        "id": 25,
+        "question": "What is the company's annual revenue?",
+        "expected_pages": [],
+        "answerable": false,
+        "expected_answer": "The information is not available in the document."
+    },
+    {
+        "id": 26,
+        "question": "What programming language was used to create the original version?",
+        "expected_pages": [],
+        "answerable": false,
+        "expected_answer": "The information is not available in the document."
+    }
+]
