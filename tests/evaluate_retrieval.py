@@ -1,6 +1,13 @@
 import json
-
+import sys
 from pathlib import Path
+
+# Ensure project root is on sys.path so 'src' imports work reliably
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+import pymupdf
 
 from src.vector_store import (
     create_faiss_index,
@@ -16,22 +23,20 @@ from src.hybrid_search import (
     hybrid_search
 )
 
+from src.text_splitter import split_text
+
 
 # ============================================================
 # Load evaluation questions
 # ============================================================
 
-evaluation_file = Path(
-    "tests/evaluation_questions.json"
-)
-
+evaluation_file = PROJECT_ROOT / "tests" / "evaluation_questions.json"
 
 with open(
     evaluation_file,
     "r",
     encoding="utf-8"
 ) as file:
-
     questions = json.load(
         file
     )
@@ -46,34 +51,23 @@ with open(
 # We will improve this later so the evaluator
 # automatically processes a PDF.
 
+PDF_NAME = "Smart Document Assistant.pdf"
+PDF_PATH = PROJECT_ROOT / PDF_NAME
 
-import fitz
-
-
-PDF_PATH = "Smart Document Assistant.pdf"
-
-
-document = fitz.open(
+document = pymupdf.open(
     PDF_PATH
 )
 
-
-from src.text_splitter import split_text
-
-
 all_chunks = []
 
-
 for page_number, page in enumerate(
-    document
+    document,
+    start=1
 ):
-
     page_text = page.get_text()
-
 
     if not page_text.strip():
         continue
-
 
     chunks = split_text(
         page_text,
@@ -81,16 +75,13 @@ for page_number, page in enumerate(
         chunk_overlap=200
     )
 
-
     for chunk in chunks:
-
         all_chunks.append(
             {
                 "text": chunk,
-
                 "metadata": {
-                    "source": PDF_PATH,
-                    "page": page_number + 1,
+                    "source": PDF_NAME,
+                    "page": page_number,
                     "chunk_id": len(all_chunks)
                 }
             }
@@ -132,22 +123,28 @@ bm25_index = create_bm25_index(
 
 def check_hit(
     results,
-    expected_page
+    expected_pages
 ):
+    """
+    Checks if any of the expected pages appear in the retrieval results.
+    Returns True if at least one expected page was retrieved, False otherwise.
+    """
+    if not expected_pages:
+        return False
 
-    for result in results:
+    if isinstance(expected_pages, int):
+        expected_pages = [expected_pages]
 
-        page = result[
-            "metadata"
-        ]["page"]
+    retrieved_pages = {
+        result["metadata"].get("page")
+        for result in results
+        if "metadata" in result
+    }
 
-
-        if page == expected_page:
-
-            return True
-
-
-    return False
+    return any(
+        page in retrieved_pages
+        for page in expected_pages
+    )
 
 
 # ============================================================
@@ -158,10 +155,8 @@ faiss_hits = 0
 bm25_hits = 0
 hybrid_hits = 0
 
-
-total = len(
-    questions
-)
+total = len(questions)
+evaluable_total = 0
 
 
 # ============================================================
@@ -174,26 +169,33 @@ for item in questions:
         "question"
     ]
 
-    expected_page = item[
-        "expected_page"
-    ]
+    # Support both 'expected_pages' (list) and legacy 'expected_page' (int or list)
+    raw_expected = item.get("expected_pages")
+    if raw_expected is None:
+        raw_expected = item.get("expected_page", [])
 
+    if isinstance(raw_expected, int):
+        expected_pages = [raw_expected]
+    else:
+        expected_pages = list(raw_expected)
 
     print(
         "\n"
         + "=" * 70
     )
 
-
     print(
         f"Question: {question}"
     )
 
-
-    print(
-        f"Expected page: {expected_page}"
-    )
-
+    if expected_pages:
+        print(
+            f"Expected page(s): {expected_pages}"
+        )
+    else:
+        print(
+            "Expected page(s): None (unanswerable question)"
+        )
 
     # --------------------------------------------------------
     # FAISS
@@ -206,17 +208,10 @@ for item in questions:
         k=5
     )
 
-
     faiss_hit = check_hit(
         faiss_results,
-        expected_page
+        expected_pages
     )
-
-
-    if faiss_hit:
-
-        faiss_hits += 1
-
 
     # --------------------------------------------------------
     # BM25
@@ -229,17 +224,10 @@ for item in questions:
         k=5
     )
 
-
     bm25_hit = check_hit(
         bm25_results,
-        expected_page
+        expected_pages
     )
-
-
-    if bm25_hit:
-
-        bm25_hits += 1
-
 
     # --------------------------------------------------------
     # Hybrid
@@ -251,33 +239,50 @@ for item in questions:
         k=5
     )
 
-
     hybrid_hit = check_hit(
         hybrid_results,
-        expected_page
+        expected_pages
     )
 
+    if expected_pages:
+        evaluable_total += 1
 
-    if hybrid_hit:
+        if faiss_hit:
+            faiss_hits += 1
 
-        hybrid_hits += 1
+        if bm25_hit:
+            bm25_hits += 1
 
+        if hybrid_hit:
+            hybrid_hits += 1
 
-    # --------------------------------------------------------
-    # Print results
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # Print results
+        # --------------------------------------------------------
 
-    print(
-        f"FAISS:  {'HIT' if faiss_hit else 'MISS'}"
-    )
+        print(
+            f"FAISS:  {'HIT' if faiss_hit else 'MISS'}"
+        )
 
-    print(
-        f"BM25:   {'HIT' if bm25_hit else 'MISS'}"
-    )
+        print(
+            f"BM25:   {'HIT' if bm25_hit else 'MISS'}"
+        )
 
-    print(
-        f"Hybrid: {'HIT' if hybrid_hit else 'MISS'}"
-    )
+        print(
+            f"Hybrid: {'HIT' if hybrid_hit else 'MISS'}"
+        )
+    else:
+        print(
+            "FAISS:  N/A (unanswerable question)"
+        )
+
+        print(
+            "BM25:   N/A (unanswerable question)"
+        )
+
+        print(
+            "Hybrid: N/A (unanswerable question)"
+        )
 
 
 # ============================================================
@@ -289,38 +294,34 @@ print(
     + "=" * 70
 )
 
-
 print(
     "EVALUATION RESULTS"
 )
-
 
 print(
     "=" * 70
 )
 
-
 print(
-    f"Total questions: {total}"
+    f"Total questions: {total} ({evaluable_total} evaluable with expected pages)"
 )
 
+denom = evaluable_total if evaluable_total > 0 else 1
 
 print(
     f"FAISS Hit@5: "
-    f"{faiss_hits}/{total} "
-    f"({faiss_hits / total * 100:.1f}%)"
+    f"{faiss_hits}/{evaluable_total} "
+    f"({faiss_hits / denom * 100:.1f}%)"
 )
-
 
 print(
     f"BM25 Hit@5: "
-    f"{bm25_hits}/{total} "
-    f"({bm25_hits / total * 100:.1f}%)"
+    f"{bm25_hits}/{evaluable_total} "
+    f"({bm25_hits / denom * 100:.1f}%)"
 )
-
 
 print(
     f"Hybrid Hit@5: "
-    f"{hybrid_hits}/{total} "
-    f"({hybrid_hits / total * 100:.1f}%)"
+    f"{hybrid_hits}/{evaluable_total} "
+    f"({hybrid_hits / denom * 100:.1f}%)"
 )
